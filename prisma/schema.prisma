@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("MANAGER") // "ADMIN" or "MANAGER"
+  isAdmin   Boolean  @default(false)
+  
+  // Outlook tokens for email integration
+  outlookAccessToken  String?  @db.Text
+  outlookRefreshToken String?  @db.Text
+  outlookTokenExpiry  DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  managedTourFiles TourFile[]
+  emails           Email[]
+}
+
+model Customer {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  phone           String
+  alternatePhone  String?
+  address         String?
+  dateOfBirth     String?
+  tags            String   @default("[]")
+  preferences     String   @default("{}")
+  totalBookings   Int      @default(0)
+  totalSpent      Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  bookings        Booking[]
+  notes           Note[]
+}
+
+model Booking {
+  id              String   @id @default(uuid())
+  bookingNumber   String   @unique
+  fileCode        String
+  customerId      String
+  customerName    String
+  destination     String
+  travelDate      DateTime
+  returnDate      DateTime?
+  status          String   @default("CONFIRMED")
+  totalAmount     Float
+  paidAmount      Float    @default(0)
+  bookingType     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  customer        Customer   @relation(fields: [customerId], references: [id])
+  tickets         Ticket[]
+  tourFiles       TourFile[]
+  documents       Document[]
+  notes           Note[]
+}
+
+model TourFile {
+  id            String   @id @default(uuid())
+  fileCode      String   @unique
+  tourName      String
+  clientName    String?
+  clientCountry String?
+  bookingId     String?
+  pax           Int      @default(1)
+  cities        String   @default("[]")
+  hotels        String   @default("[]")
+  guides        String   @default("[]")
+  guide         String?
+  agentName     String?
+  foreignTourOperator String? // Foreign tour operator company
+  transportType String?
+  startDate     DateTime
+  endDate       DateTime
+  status        String   @default("UPCOMING") // "UPCOMING", "IN_PROGRESS", "COMPLETED"
+  invoiceStatus String   @default("YET_TO_RAISE") // "PAID", "PENDING", "YET_TO_RAISE"
+  revenue       Float    @default(0)
+  roomNights    Int      @default(0)
+  pnr           String?
+  coverImage    String?
+  conversations Int      @default(0)
+  tickets       Int      @default(0)
+  year          Int
+  month         Int
+  
+  // PDF Form Fields
+  bookingDate         DateTime?
+  arrivalDate         DateTime?
+  
+  // Accommodation
+  accomSingle         String?
+  accomDouble         String?
+  accomTwin           String?
+  accomTriple         String?
+  accomSuite          String?
+  accomMeals          String?
+  
+  // Flight & Transport
+  flight              String?
+  flightTime          String?
+  provider            String?
+  transport           String?
+  tourLeader          String?
+  
+  // Checklist Items
+  voucher             String?
+  trainTickets        String?
+  airTicket           String?
+  trainTkt            String?
+  safaris             String?
+  trainTicket120      String?
+  specials            String?
+  
+  // Itinerary (JSON array of rows)
+  itinerary           String?  @db.Text  // JSON: [{date, sector, flights, city, hotel, roomCategory}]
+  
+  // Manager assignment
+  managerId     String
+  manager       User     @relation(fields: [managerId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  booking       Booking?   @relation(fields: [bookingId], references: [id])
+  documents     Document[]
+  relatedEmails Email[]
+  
+  @@index([managerId])
+  @@index([status])
+  @@index([year, month])
+  @@index([startDate])
+}
+
+model Ticket {
+  id              String   @id @default(uuid())
+  ticketNumber    String   @unique
+  ticketType      String
+  bookingId       String
+  pnr             String
+  provider        String
+  passengerName   String
+  origin          String?
+  destination     String?
+  departureDate   DateTime
+  departureTime   String?
+  arrivalDate     DateTime?
+  arrivalTime     String?
+  class           String?
+  fare            Float
+  status          String   @default("CONFIRMED")
+  emailSource     String?
+  parsedDate      DateTime?
+  confidence      Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  booking         Booking    @relation(fields: [bookingId], references: [id])
+  documents       Document[]
+}
+
+model Guide {
+  id           String   @id @default(uuid())
+  name         String
+  phone        String
+  email        String?
+  city         String
+  languages    String   @default("[]")
+  expertise    String   @default("[]")
+  rating       Float    @default(0)
+  totalTours   Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Hotel {
+  id           String   @id @default(uuid())
+  name         String
+  city         String
+  state        String   @default("")
+  address      String   @default("")
+  phone        String   @default("")
+  email        String?
+  starRating   Int      @default(3)
+  rating       Float    @default(0)
+  amenities    String   @default("[]")
+  totalBookings Int     @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Document {
+  id            String   @id @default(uuid())
+  name          String
+  type          String
+  category      String
+  filePath      String
+  fileSize      String
+  bookingId     String?
+  tourFileId    String?
+  ticketId      String?
+  status        String   @default("PENDING")
+  uploadedAt    DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  booking       Booking?  @relation(fields: [bookingId], references: [id])
+  tourFile      TourFile? @relation(fields: [tourFileId], references: [id])
+  ticket        Ticket?   @relation(fields: [ticketId], references: [id])
+}
+
+model Email {
+  id              String   @id @default(uuid())
+  messageId       String   @unique  // Outlook message ID
+  subject         String
+  from            String
+  fromEmail       String
+  to              String
+  toRecipients    String   @default("[]") // JSON array
+  cc              String   @default("[]") // JSON array
+  body            String   @db.Text
+  bodyPreview     String?
+  receivedAt      DateTime
+  
+  // Flags
+  isRead          Boolean  @default(false)
+  isParsed        Boolean  @default(false)
+  hasAttachments  Boolean  @default(false)
+  isStarred       Boolean  @default(false)
+  
+  // Parsing results
+  confidence      Float?     // 0-100 parsing confidence
+  extractedPNRs   String   @default("[]") // JSON array of PNRs found
+  extractedDates  String   @default("[]") // JSON array of travel dates
+  
+  // Relationships
+  tourFileId      String?
+  tourFile        TourFile? @relation(fields: [tourFileId], references: [id])
+  
+  bookingId       String?
+  
+  // Attachments (JSON)
+  attachments     String?  @db.Text  // JSON array: {name, contentType, size, downloadUrl}
+  
+  // Outlook specific
+  conversationId  String?
+  categories      String   @default("[]") // JSON array
+  importance      String?  // "low", "normal", "high"
+  
+  // User who owns this email
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([tourFileId])
+  @@index([isRead])
+  @@index([receivedAt])
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  content    String
+  bookingId  String?
+  customerId String?
+  priority   String   @default("LOW")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  booking    Booking?  @relation(fields: [bookingId], references: [id])
+  customer   Customer? @relation(fields: [customerId], references: [id])
+}
+
+model Reminder {
+  id        String   @id @default(uuid())
+  title     String
+  description String?
+  dueDate   DateTime
+  priority  String   @default("MEDIUM")
+  isCompleted Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
