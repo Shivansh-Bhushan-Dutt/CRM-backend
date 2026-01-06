@@ -1,8 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import prisma from '../config/database';
 import { ApiError } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -45,12 +49,22 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       throw new ApiError(401, 'Invalid credentials');
     }
 
+    // Generate JWT token (optional for now, authentication not enforced)
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
     const { password: _, ...userWithoutPassword } = user;
 
     res.json({
       success: true,
       message: 'Login successful',
-      data: { user: userWithoutPassword }
+      data: { 
+        user: userWithoutPassword,
+        token 
+      }
     });
   } catch (error) {
     next(error);
