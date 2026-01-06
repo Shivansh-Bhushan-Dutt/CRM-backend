@@ -6,7 +6,7 @@ export const getMetrics = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const totalBookings = await prisma.booking.count();
     const totalTickets = await prisma.ticket.count();
-    const pendingBookings = await prisma.booking.count({ where: { fileStatus: 'PENDING' } });
+    const pendingBookings = await prisma.booking.count({ where: { status: 'PENDING' } });
     const totalCustomers = await prisma.customer.count();
 
     const totalRevenue = await prisma.booking.aggregate({
@@ -29,9 +29,9 @@ export const getMetrics = async (req: AuthRequest, res: Response, next: NextFunc
 
 export const getChartData = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const bookingsByfileStatus = await prisma.booking.groupBy({
-      by: ['fileStatus'],
-      _count: { fileStatus: true }
+    const bookingsByStatus = await prisma.booking.groupBy({
+      by: ['status'],
+      _count: { status: true }
     });
 
     const ticketsByType = await prisma.ticket.groupBy({
@@ -46,9 +46,9 @@ export const getChartData = async (req: AuthRequest, res: Response, next: NextFu
     });
 
     const chartData = {
-      bookingsByfileStatus: bookingsByfileStatus.map(item => ({
-        fileStatus: item.fileStatus,
-        count: item._count.fileStatus
+      bookingsByStatus: bookingsByStatus.map(item => ({
+        status: item.status,
+        count: item._count.status
       })),
       ticketsByType: ticketsByType.map(item => ({
         type: item.ticketType,
@@ -97,13 +97,13 @@ export const getUpcomingTrips = async (req: AuthRequest, res: Response, next: Ne
 
     const upcomingBookings = await prisma.booking.findMany({
       where: {
-        startDate: { gte: today, lte: nextMonth },
-        fileStatus: { in: ['CONFIRMED', 'PENDING'] }
+        travelDate: { gte: today, lte: nextMonth },
+        status: { in: ['CONFIRMED', 'PENDING'] }
       },
       include: {
         customer: { select: { name: true, email: true, phone: true } }
       },
-      orderBy: { startDate: 'asc' },
+      orderBy: { travelDate: 'asc' },
       take: 10
     });
 

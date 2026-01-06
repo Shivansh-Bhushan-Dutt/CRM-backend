@@ -65,9 +65,9 @@ export const createTicket = async (req: AuthRequest, res: Response, next: NextFu
       departureTime,
       arrivalDate,
       arrivalTime,
-      seatClass,
+      ticketClass,
       fare,
-      fileStatus
+      status
     } = req.body;
 
     const ticket = await prisma.ticket.create({
@@ -84,14 +84,14 @@ export const createTicket = async (req: AuthRequest, res: Response, next: NextFu
         departureTime,
         arrivalDate: arrivalDate ? new Date(arrivalDate) : null,
         arrivalTime,
-        seatClass,
+        class: ticketClass,
         fare,
-        fileStatus: fileStatus || 'CONFIRMED'
+        status: status || 'CONFIRMED'
       },
       include: { booking: true }
     });
 
-    res.fileStatus(201).json({
+    res.status(201).json({
       success: true,
       message: 'Ticket created successfully',
       data: { ticket }

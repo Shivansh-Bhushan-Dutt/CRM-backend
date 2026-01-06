@@ -20,7 +20,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       select: { id: true, email: true, name: true, role: true }
     });
 
-    res.fileStatus(201).json({
+    res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: { user }

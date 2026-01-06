@@ -67,7 +67,7 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
       bookingType,
       totalAmount,
       paidAmount,
-      fileStatus
+      status
     } = req.body;
 
     const booking = await prisma.booking.create({
@@ -82,12 +82,12 @@ export const createBooking = async (req: AuthRequest, res: Response, next: NextF
         bookingType,
         totalAmount,
         paidAmount: paidAmount || 0,
-        fileStatus: fileStatus || 'CONFIRMED'
+        status: status || 'CONFIRMED'
       },
       include: { customer: true }
     });
 
-    res.fileStatus(201).json({
+    res.status(201).json({
       success: true,
       message: 'Booking created successfully',
       data: { booking }

@@ -72,7 +72,7 @@ export const createCustomer = async (req: AuthRequest, res: Response, next: Next
       }
     });
 
-    res.fileStatus(201).json({
+    res.status(201).json({
       success: true,
       message: 'Customer created successfully',
       data: { customer }

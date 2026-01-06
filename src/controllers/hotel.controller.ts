@@ -56,7 +56,7 @@ export const createHotel = async (req: AuthRequest, res: Response, next: NextFun
       }
     });
 
-    res.fileStatus(201).json({
+    res.status(201).json({
       success: true,
       message: 'Hotel created successfully',
       data: { hotel }

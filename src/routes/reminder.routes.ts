@@ -17,7 +17,6 @@ router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
 
     const reminders = await prisma.reminder.findMany({
       where,
-      include: { booking: { select: { bookingNumber: true } } },
       orderBy: { dueDate: 'asc' }
     });
 
@@ -29,7 +28,7 @@ router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
 
 router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { title, description, dueDate, priority, bookingId } = req.body;
+    const { title, description, dueDate, priority } = req.body;
 
     const reminder = await prisma.reminder.create({
       data: {
@@ -37,12 +36,11 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
         description,
         dueDate: new Date(dueDate),
         priority: priority || 'MEDIUM',
-        bookingId,
         isCompleted: false
       }
     });
 
-    res.fileStatus(201).json({ success: true, message: 'Reminder created', data: { reminder } });
+    res.status(201).json({ success: true, message: 'Reminder created', data: { reminder } });
   } catch (error) {
     next(error);
   }

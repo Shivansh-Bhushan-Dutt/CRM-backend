@@ -59,11 +59,11 @@ export const uploadDocument = async (req: AuthRequest, res: Response, next: Next
         bookingId,
         tourFileId,
         ticketId,
-        fileStatus: 'PENDING'
+        status: 'PENDING'
       }
     });
 
-    res.fileStatus(201).json({
+    res.status(201).json({
       success: true,
       message: 'Document uploaded successfully',
       data: { document }
@@ -73,19 +73,19 @@ export const uploadDocument = async (req: AuthRequest, res: Response, next: Next
   }
 };
 
-export const updateDocumentfileStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const updateDocumentStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { fileStatus } = req.body;
+    const { status } = req.body;
 
     const document = await prisma.document.update({
       where: { id },
-      data: { fileStatus }
+      data: { status }
     });
 
     res.json({
       success: true,
-      message: 'Document fileStatus updated',
+      message: 'Document status updated',
       data: { document }
     });
   } catch (error) {

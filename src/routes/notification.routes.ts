@@ -43,7 +43,7 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
       }
     });
 
-    res.fileStatus(201).json({ success: true, message: 'Note created', data: { note } });
+    res.status(201).json({ success: true, message: 'Note created', data: { note } });
   } catch (error) {
     next(error);
   }

@@ -10,7 +10,7 @@ router.get('/', documentController.getAllDocuments);
 router.get('/categories/stats', documentController.getDocumentsByCategory);
 router.get('/:id', documentController.getDocumentById);
 router.post('/upload', authorize('ADMIN', 'MANAGER'), documentController.uploadDocument);
-router.put('/:id/fileStatus', authorize('ADMIN', 'MANAGER'), documentController.updateDocumentfileStatus);
+router.put('/:id/status', authorize('ADMIN', 'MANAGER'), documentController.updateDocumentStatus);
 router.delete('/:id', authorize('ADMIN'), documentController.deleteDocument);
 
 export default router;
